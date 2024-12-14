@@ -19,8 +19,8 @@
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit" class="btn btn-primary">Guardar Ingrediente</button>
+        <a href="{% url 'crear_ingrediente' receta_id=receta.id %}" class="btn btn-primary">Crear Nuevo Ingrediente</a>
     </form>
-
     <a href="{% url 'detalle_receta' receta.id %}" class="btn btn-secondary mt-3">Volver a la Receta</a>
 </div>
 {% endblock %}

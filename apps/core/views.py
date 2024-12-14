@@ -212,3 +212,16 @@ class EliminarIngredienteView(LoginRequiredMixin, DeleteView):
     def get_success_url(self):
         # Redirige al detalle de la receta después de eliminar el ingrediente
         return reverse('detalle_receta', kwargs={'pk': self.object.receta.id})
+    
+# Vista para crear un nuevo ingrediente
+class CrearIngredienteView(LoginRequiredMixin, CreateView):
+    model = Ingrediente
+    form_class = IngredienteForm
+    template_name = 'crear_ingrediente.html'
+
+    def get_success_url(self):
+        receta_id = self.kwargs.get('receta_id')
+        if not receta_id:  # Verificar si receta_id es válido
+            raise ValueError("El receta_id no fue proporcionado correctamente a get_success_url.")
+        print(f"Receta ID en get_success_url: {receta_id}")  # Depuración
+        return reverse('agregar_ingrediente', kwargs={'receta_id': receta_id})

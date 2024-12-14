@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Crear Nuevo Ingrediente</h2>
+<p>Receta ID: {{ receta_id }}</p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Guardar</button>
+  </form>
+  <a href="{{ request.META.HTTP_REFERER }}" class="btn btn-secondary mt-3">Volver</a>
+{% endblock %}

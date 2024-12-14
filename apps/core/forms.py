@@ -26,3 +26,8 @@ IngredienteFormSet = forms.inlineformset_factory(
     extra=1,
     can_delete=True
 )
+
+class IngredienteForm(forms.ModelForm):
+    class Meta:
+        model = Ingrediente
+        fields = ['nombre', 'unidad']
