@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio | Perico Recetas{% endblock %}
+
+{% block content %}
+{% load static %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Recetas Destacadas</h2>
+    
+    <div class="row">
+        <!-- Card 1 -->
+        <div class="col-md-4">
+            <div class="card">
+                <img src="{% static 'img/comida_militar.webp' %}" class="card-img-top" alt="Receta 1">
+                <div class="card-body">
+                    <h5 class="card-title">Tarta de Manzana</h5>
+                    <p class="card-text">Deliciosa tarta con un toque especial de canela. Perfecta para postres.</p>
+                    <a href="#" class="btn btn-primary">Ver receta completa</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Card 2 -->
+        <div class="col-md-4">
+            <div class="card">
+                <img src="{% static 'img/militar_cocinando.webp' %}" class="card-img-top" alt="Receta 2">
+                <div class="card-body">
+                    <h5 class="card-title">Ensalada César</h5>
+                    <p class="card-text">Fresca y deliciosa ensalada con aderezo casero y crutones crujientes.</p>
+                    <a href="#" class="btn btn-primary">Ver receta completa</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Card 3 -->
+        <div class="col-md-4">
+            <div class="card">
+                <img src="{% static 'img/militar_cocinando.webp' %}" class="card-img-top" alt="Receta 3">
+                <div class="card-body">
+                    <h5 class="card-title">Pasta Carbonara</h5>
+                    <p class="card-text">Un clásico italiano con un toque de panceta y salsa cremosa.</p>
+                    <a href="#" class="btn btn-primary">Ver receta completa</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

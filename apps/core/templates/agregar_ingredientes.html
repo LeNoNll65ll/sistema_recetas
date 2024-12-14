@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Agregar Ingredientes | {{ receta.titulo }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Agregar Ingredientes para: {{ receta.titulo }}</h2>
+    <p><strong>Categoría:</strong>
+        {% if receta.categoria %}
+            {{ receta.categoria.nombre }}
+        {% else %}
+            Sin categoría
+        {% endif %}
+    </p>
+    <p><strong>Dificultad:</strong> {{ receta.dificultad }}</p>
+    <p><strong>Tiempo de cocción:</strong> {{ receta.tiempo_coccion }} minutos</p>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Guardar Ingrediente</button>
+    </form>
+
+    <a href="{% url 'detalle_receta' receta.id %}" class="btn btn-secondary mt-3">Volver a la Receta</a>
+</div>
+{% endblock %}

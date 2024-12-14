@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ receta.titulo }} | Detalles{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>{{ receta.titulo }}</h1>
+    <p><strong>Categoría:</strong>
+        {% if receta.categoria %}
+            {{ receta.categoria.nombre }}
+        {% else %}
+            Sin categoría
+        {% endif %}
+    </p>
+    <p><strong>Descripción:</strong> {{ receta.descripcion }}</p>
+    <p><strong>Dificultad:</strong> {{ receta.dificultad }}</p>
+    <p><strong>Tiempo de cocción:</strong> {{ receta.tiempo_coccion }} minutos</p>
+    {% if receta.imagen %}
+        <img src="{{ receta.imagen.url }}" alt="{{ receta.titulo }}" class="img-fluid">
+    {% endif %}
+
+    <h3 class="mt-5">Ingredientes</h3>
+    {% if ingredientes %}
+        <ul>
+            {% for ingrediente in ingredientes %}
+                <li>
+                    {{ ingrediente.cantidad }} {{ ingrediente.ingrediente.unidad }} de {{ ingrediente.ingrediente.nombre }}
+                    {% if receta.usuario == request.user %}
+                    <!-- Botón para eliminar -->
+                    <form action="{% url 'eliminar_ingrediente' ingrediente.id %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm">X</button>
+                    </form>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No se han agregado ingredientes aún.</p>
+    {% endif %}
+    {% if receta.usuario == request.user %}
+    <a href="{% url 'editar_receta' receta.id %}" class="btn btn-warning mt-3">Editar Receta</a>
+    <a href="{% url 'eliminar_receta' receta.id %}" class="btn btn-danger mt-3">Eliminar Receta</a>
+    <a href="{% url 'agregar_ingrediente' receta.id %}" class="btn btn-success mt-3">Agregar Ingredientes</a>
+    {% endif %}
+</div>
+{% endblock %}
