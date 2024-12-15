@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Mis Recetas{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Mis Recetas</h1>
+
+    {% if recetas %}
+        <div class="row">
+            {% for receta in recetas %}
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        {% if receta.imagen %}
+                            <img src="{{ receta.imagen.url }}" class="card-img-top" alt="{{ receta.titulo }}" style="height: 350px; object-fit: cover;">
+                        {% else %}
+                        {% load static %}
+                            <img src="{% static 'img/default_receta.png' %}" class="card-img-top" alt="Receta" style="height: 350px; object-fit: cover;">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ receta.titulo }}</h5>
+                            <p class="card-text">{{ receta.descripcion|truncatewords:15 }}</p>
+                            <a href="{% url 'detalle_receta' receta.id %}" class="btn btn-primary">Ver Detalles</a>
+                            <a href="{% url 'editar_receta' receta.id %}" class="btn btn-warning">Editar</a>
+                            <a href="{% url 'eliminar_receta' receta.id %}" class="btn btn-danger">Eliminar</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No has agregado ninguna receta aún. <a href="{% url 'agregar_receta' %}">Crea tu primera receta aquí.</a></p>
+    {% endif %}
+</div>
+<!-- Controles de paginación -->
+<div class="d-flex justify-content-center mt-4">
+    {% if is_paginated %}
+    <nav aria-label="Paginación de recetas">
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Anterior">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in paginator.page_range %}
+            {% if num == page_obj.number %}
+            <li class="page-item active" aria-current="page">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Siguiente">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

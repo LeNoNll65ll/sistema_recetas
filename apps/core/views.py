@@ -11,6 +11,7 @@ from django.views.generic import TemplateView, CreateView, View, DetailView, Lis
 from django.views.generic.edit import DeleteView, FormMixin
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
 from .forms import *
 from .models import *
 
@@ -214,6 +215,17 @@ class EliminarRecetaView(DeleteView):
     template_name = 'recetas/eliminar_receta.html'
     success_url = reverse_lazy('lista_recetas')  # Redirige a la lista de recetas después de eliminar
 
+# Vista de recetas por usuario
+class MisRecetasView(LoginRequiredMixin, ListView):
+    model = Receta
+    template_name = 'recetas/mis_recetas.html'  # Template que se usará
+    context_object_name = 'recetas'
+    paginate_by = 3  # Mostrar solo 3 recetas por página
+
+    def get_queryset(self):
+        # Filtra las recetas que pertenecen al usuario autenticado
+        return Receta.objects.filter(usuario=self.request.user).order_by('-id')
+
 
 # ============================
 # GESTIÓN DE INGREDIENTES
@@ -257,7 +269,7 @@ class EliminarIngredienteView(LoginRequiredMixin, DeleteView):
         # Verifica si el usuario tiene permiso para eliminar el ingrediente
         ingrediente = super().get_object(queryset)
         if ingrediente.receta.usuario != self.request.user:
-            raise HttpResponseForbidden("No tienes permiso para eliminar este ingrediente.")
+            raise PermissionDenied("No tienes permiso para eliminar este ingrediente.")
         return ingrediente
 
     def get_success_url(self):

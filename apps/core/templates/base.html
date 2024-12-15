@@ -11,7 +11,7 @@
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
             <a class="navbar-brand" href="{% url 'home' %}">Perico Recetas</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -27,7 +27,7 @@
                         <a class="nav-link" href="{% url 'agregar_receta' %}">Agregar Recetas</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'agregar_receta' %}">Mis resetas</a>
+                        <a class="nav-link" href="{% url 'mis_recetas' %}">Mis recetas</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'agregar_receta' %}">Mis Favoritos</a>
@@ -36,11 +36,12 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'lista_recetas' %}">Recetas</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'lista_recetas' %}">Buscar</a>
-                    </li>
                 </ul>
                 <ul class="navbar-nav mb-2 mb-lg-0">
+                    <form class="form-inline my-2 my-lg-0 d-flex me-3">
+                        <input class="form-control mr-sm-2" type="search" placeholder="Receta o Ingrediente" aria-label="Search">
+                        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Buscar</button>
+                    </form>
                     {% if user.is_authenticated %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'logout' %}">Salir</a>

@@ -29,7 +29,7 @@
                 <li>
                     {% if receta.usuario == request.user %}
                     <!-- Botón para eliminar -->
-                    <form action="{% url 'eliminar_ingrediente' ingrediente.id %}" method="post" class="d-inline">
+                    <form action="{% url 'eliminar_ingrediente' ingrediente.id %}" class="d-inline">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-danger btn-sm">X</button>
                     </form>
