@@ -72,6 +72,9 @@ class Valoracion(models.Model):
     estrellas = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     comentario = models.TextField(blank=True, null=True)
 
+    class Meta:
+        unique_together = ('usuario', 'receta')  # Restricción de una valoración por usuario y receta
+
     def __str__(self):
         return f"Valoración de {self.estrellas} estrellas para {self.receta.titulo} por {self.usuario.username}"
 

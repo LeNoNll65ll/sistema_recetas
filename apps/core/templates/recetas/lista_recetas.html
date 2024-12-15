@@ -11,7 +11,7 @@
         <div class="col-md-4">
             <div class="card">
                 {% if receta.imagen %}
-                <img src="{{ receta.imagen.url }}" class="card-img-top" alt="{{ receta.titulo }}">
+                <img src="{{ receta.imagen.url }}" class="card-img-top" alt="{{ receta.titulo }}" style="height: 350px; object-fit: cover;">
                 {% else %}
                 {% load static%}
                 <img src="{% static 'img/default_receta.png' %}" class="card-img-top" alt="Sin Imagen">

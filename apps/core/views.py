@@ -5,9 +5,10 @@ from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.db import IntegrityError
+from django.db.models import Avg
 from django.urls import reverse, reverse_lazy
 from django.views.generic import TemplateView, CreateView, View, DetailView, ListView, UpdateView
-from django.views.generic.edit import DeleteView
+from django.views.generic.edit import DeleteView, FormMixin
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import *
@@ -35,7 +36,7 @@ class HolaMundoView(TemplateView):
 # Vista para ingresar (login)
 class IngresarView(LoginView):
     # Renderiza el formulario de inicio de sesión
-    template_name = 'login.html'
+    template_name = 'registro/login.html'
     redirect_authenticated_user = True  # Redirige si ya está autenticado
     next_page = '/'  # Redirige al inicio después del login
 
@@ -65,7 +66,7 @@ class SalirView(LoginRequiredMixin, LogoutView):
 class RegistrarseView(View):
     def get(self, request):
         # Renderiza el formulario de registro
-        return render(request, 'register.html', {"form": UserCreationForm()})
+        return render(request, 'registro/register.html', {"form": UserCreationForm()})
 
     def post(self, request):
         # Procesa el registro de un nuevo usuario
@@ -95,7 +96,7 @@ class RegistrarseView(View):
 # Vista para agregar recetas
 class AgregarRecetaView(LoginRequiredMixin, CreateView):
     # Renderiza un formulario para agregar recetas
-    template_name = 'agregar_receta.html'
+    template_name = 'recetas/agregar_receta.html'
     form_class = RecetaForm
 
     def form_valid(self, form):
@@ -120,7 +121,7 @@ class AgregarRecetaView(LoginRequiredMixin, CreateView):
 class ListaRecetasView(ListView):
     # Muestra todas las recetas en una lista paginada
     model = Receta
-    template_name = 'lista_recetas.html'
+    template_name = 'recetas/lista_recetas.html'
     context_object_name = 'recetas'
     paginate_by = 3  # Número de recetas por página
 
@@ -130,18 +131,68 @@ class ListaRecetasView(ListView):
 
 
 # Vista para los detalles de una receta
-class DetalleRecetaView(DetailView):
-    # Muestra los detalles de una receta específica
+class DetalleRecetaView(FormMixin, DetailView):
     model = Receta
-    print(model)
-    template_name = 'detalle_receta.html'
+    template_name = 'recetas/detalle_receta.html'
     context_object_name = 'receta'
+    form_class = ValoracionForm  # Formulario para valoraciones
+    comentario_form = ComentarioForm
 
     def get_context_data(self, **kwargs):
-        # Incluye los ingredientes de la receta en el contexto
         context = super().get_context_data(**kwargs)
-        context['ingredientes'] = self.object.ingredientes.all()
+        context['valoraciones'] = self.object.valoraciones.all()
+        context['promedio_valoraciones'] = self.object.valoraciones.aggregate(promedio=Avg('estrellas'))['promedio'] or 0
+        context['form'] = self.get_form()
+        context['comentarios'] = self.object.comentarios.all()  # Traer todos los comentarios de la receta
+        context['comentario_form'] = ComentarioForm()  # Formulario para nuevos comentarios
+        context['ingredientes'] = self.object.ingredientes.all()  # Traer todos los ingredientes relacionados
         return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        # Manejar valoraciones
+        if 'estrellas' in request.POST:
+            form = self.get_form()
+            if form.is_valid():
+                # Intentar obtener o crear la valoración
+                valoracion, creada = Valoracion.objects.get_or_create(
+                    usuario=request.user,
+                    receta=self.object,
+                    defaults={
+                        'estrellas': form.cleaned_data['estrellas'],
+                        'comentario': form.cleaned_data['comentario']
+                    }
+                )
+                if not creada:
+                    # Si ya existía, actualizar los campos
+                    valoracion.estrellas = form.cleaned_data['estrellas']
+                    valoracion.comentario = form.cleaned_data['comentario']
+                    valoracion.save()
+
+                # Actualizar el promedio de valoraciones
+                self.object.valoracion_promedio = self.object.valoraciones.aggregate(promedio=Avg('estrellas'))['promedio'] or 0
+                self.object.save()
+
+                return self.form_valid(form)
+            else:
+                return self.form_invalid(form)
+
+        # Manejar comentarios
+        elif 'comentario' in request.POST:
+            comentario_form = ComentarioForm(request.POST)
+            if comentario_form.is_valid():
+                comentario = comentario_form.save(commit=False)
+                comentario.usuario = request.user
+                comentario.receta = self.object
+                comentario.save()
+                return redirect(self.get_success_url())
+
+        return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        return reverse('recetas/detalle_receta', kwargs={'pk': self.object.pk})
+
 
 
 # Vista para editar recetas
@@ -149,7 +200,7 @@ class EditarRecetaView(UpdateView):
     # Renderiza un formulario para editar recetas
     model = Receta
     fields = ['titulo', 'descripcion', 'categoria', 'tiempo_coccion', 'dificultad', 'imagen']
-    template_name = 'editar_receta.html'
+    template_name = 'recetas/editar_receta.html'
 
     def get_success_url(self):
         # Redirige al detalle de la receta después de editar
@@ -160,7 +211,7 @@ class EditarRecetaView(UpdateView):
 class EliminarRecetaView(DeleteView):
     # Renderiza una página para confirmar la eliminación de recetas
     model = Receta
-    template_name = 'eliminar_receta.html'
+    template_name = 'recetas/eliminar_receta.html'
     success_url = reverse_lazy('lista_recetas')  # Redirige a la lista de recetas después de eliminar
 
 
@@ -173,7 +224,7 @@ class AgregarIngredienteView(LoginRequiredMixin, CreateView):
     # Renderiza un formulario para agregar ingredientes
     model = RecetaIngrediente
     form_class = IngredienteRecetaForm
-    template_name = 'agregar_ingredientes.html'
+    template_name = 'ingredientes/agregar_ingredientes.html'
 
     def get_context_data(self, **kwargs):
         # Incluye la receta en el contexto
@@ -200,7 +251,7 @@ class AgregarIngredienteView(LoginRequiredMixin, CreateView):
 class EliminarIngredienteView(LoginRequiredMixin, DeleteView):
     # Renderiza una página para confirmar la eliminación de ingredientes
     model = RecetaIngrediente
-    template_name = 'confirmar_eliminar_ingrediente.html'
+    template_name = 'ingredientes/confirmar_eliminar_ingrediente.html'
 
     def get_object(self, queryset=None):
         # Verifica si el usuario tiene permiso para eliminar el ingrediente
@@ -217,7 +268,7 @@ class EliminarIngredienteView(LoginRequiredMixin, DeleteView):
 class CrearIngredienteView(LoginRequiredMixin, CreateView):
     model = Ingrediente
     form_class = IngredienteForm
-    template_name = 'crear_ingrediente.html'
+    template_name = 'ingredientes/crear_ingrediente.html'
 
     def get_success_url(self):
         receta_id = self.kwargs.get('receta_id')

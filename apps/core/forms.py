@@ -31,3 +31,19 @@ class IngredienteForm(forms.ModelForm):
     class Meta:
         model = Ingrediente
         fields = ['nombre', 'unidad']
+
+class ValoracionForm(forms.ModelForm):
+    class Meta:
+        model = Valoracion
+        fields = ['estrellas', 'comentario']
+        widgets = {
+            'estrellas': forms.RadioSelect(choices=[(i, f"{i} estrellas") for i in range(1, 6)]),
+        }
+
+class ComentarioForm(forms.ModelForm):
+    class Meta:
+        model = Comentario
+        fields = ['texto']
+        widgets = {
+            'texto': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Escribe tu comentario aquí...'}),
+        }
