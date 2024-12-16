@@ -1,12 +1,13 @@
-from django.http import HttpResponseForbidden, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.db import IntegrityError
-from django.db.models import Avg
+from django.db.models import Avg, Q
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
 from django.views.generic import TemplateView, CreateView, View, DetailView, ListView, UpdateView
 from django.views.generic.edit import DeleteView, FormMixin
 from django.contrib.auth.views import LoginView, LogoutView
@@ -136,63 +137,88 @@ class DetalleRecetaView(FormMixin, DetailView):
     model = Receta
     template_name = 'recetas/detalle_receta.html'
     context_object_name = 'receta'
-    form_class = ValoracionForm  # Formulario para valoraciones
-    comentario_form = ComentarioForm
+    form_class = ValoracionForm
 
     def get_context_data(self, **kwargs):
+        """Agrega datos adicionales al contexto de la plantilla."""
         context = super().get_context_data(**kwargs)
         context['valoraciones'] = self.object.valoraciones.all()
-        context['promedio_valoraciones'] = self.object.valoraciones.aggregate(promedio=Avg('estrellas'))['promedio'] or 0
+        context['promedio_valoraciones'] = self._calcular_promedio_valoraciones()
         context['form'] = self.get_form()
-        context['comentarios'] = self.object.comentarios.all()  # Traer todos los comentarios de la receta
-        context['comentario_form'] = ComentarioForm()  # Formulario para nuevos comentarios
-        context['ingredientes'] = self.object.ingredientes.all()  # Traer todos los ingredientes relacionados
+        context['comentarios'] = self.object.comentarios.all()
+        context['comentario_form'] = ComentarioForm()
+        context['ingredientes'] = self.object.ingredientes.all()
+        context['es_favorito'] = self._verificar_favorito()
         return context
 
     def post(self, request, *args, **kwargs):
+        """Maneja POST requests para favoritos, valoraciones y comentarios."""
         self.object = self.get_object()
-        form = self.get_form()
-        # Manejar valoraciones
-        if 'estrellas' in request.POST:
-            form = self.get_form()
-            if form.is_valid():
-                # Intentar obtener o crear la valoración
-                valoracion, creada = Valoracion.objects.get_or_create(
-                    usuario=request.user,
-                    receta=self.object,
-                    defaults={
-                        'estrellas': form.cleaned_data['estrellas'],
-                        'comentario': form.cleaned_data['comentario']
-                    }
-                )
-                if not creada:
-                    # Si ya existía, actualizar los campos
-                    valoracion.estrellas = form.cleaned_data['estrellas']
-                    valoracion.comentario = form.cleaned_data['comentario']
-                    valoracion.save()
 
-                # Actualizar el promedio de valoraciones
-                self.object.valoracion_promedio = self.object.valoraciones.aggregate(promedio=Avg('estrellas'))['promedio'] or 0
-                self.object.save()
-
-                return self.form_valid(form)
-            else:
-                return self.form_invalid(form)
-
-        # Manejar comentarios
+        if 'favorito' in request.POST:
+            return self._manejar_favorito(request)
+        elif 'estrellas' in request.POST:
+            return self._manejar_valoracion(request)
         elif 'comentario' in request.POST:
-            comentario_form = ComentarioForm(request.POST)
-            if comentario_form.is_valid():
-                comentario = comentario_form.save(commit=False)
-                comentario.usuario = request.user
-                comentario.receta = self.object
-                comentario.save()
-                return redirect(self.get_success_url())
+            return self._manejar_comentario(request)
 
         return redirect(self.get_success_url())
 
+    def _calcular_promedio_valoraciones(self):
+        """Calcula el promedio de valoraciones de la receta."""
+        return self.object.valoraciones.aggregate(promedio=Avg('estrellas'))['promedio'] or 0
+
+    def _verificar_favorito(self):
+        """Verifica si la receta está en favoritos del usuario autenticado."""
+        if self.request.user.is_authenticated:
+            return RecetaFavorita.objects.filter(usuario=self.request.user, receta=self.object).exists()
+        return False
+
+    def _manejar_favorito(self, request):
+        """Maneja el agregado o eliminación de la receta a favoritos."""
+        favorito, creado = RecetaFavorita.objects.get_or_create(
+            usuario=request.user,
+            receta=self.object
+        )
+        if not creado:
+            favorito.delete()  # Si ya existía, se elimina de favoritos
+        return redirect(self.get_success_url())
+
+    def _manejar_valoracion(self, request):
+        """Maneja el proceso de agregar o actualizar una valoración."""
+        form = self.get_form()
+        if form.is_valid():
+            valoracion, creada = Valoracion.objects.get_or_create(
+                usuario=request.user,
+                receta=self.object,
+                defaults={
+                    'estrellas': form.cleaned_data['estrellas'],
+                    'comentario': form.cleaned_data['comentario']
+                }
+            )
+            if not creada:
+                valoracion.estrellas = form.cleaned_data['estrellas']
+                valoracion.comentario = form.cleaned_data['comentario']
+                valoracion.save()
+
+            self.object.valoracion_promedio = self._calcular_promedio_valoraciones()
+            self.object.save()
+            return self.form_valid(form)
+        return self.form_invalid(form)
+
+    def _manejar_comentario(self, request):
+        """Maneja el proceso de agregar un nuevo comentario."""
+        comentario_form = ComentarioForm(request.POST)
+        if comentario_form.is_valid():
+            comentario = comentario_form.save(commit=False)
+            comentario.usuario = request.user
+            comentario.receta = self.object
+            comentario.save()
+        return redirect(self.get_success_url())
+
     def get_success_url(self):
-        return reverse('recetas/detalle_receta', kwargs={'pk': self.object.pk})
+        """Define la URL a la que se redirige después de una acción exitosa."""
+        return reverse('detalle_receta', kwargs={'pk': self.object.pk})
 
 
 
@@ -215,7 +241,7 @@ class EliminarRecetaView(DeleteView):
     template_name = 'recetas/eliminar_receta.html'
     success_url = reverse_lazy('lista_recetas')  # Redirige a la lista de recetas después de eliminar
 
-# Vista de recetas por usuario
+# Vista de Mis recetas por usuario
 class MisRecetasView(LoginRequiredMixin, ListView):
     model = Receta
     template_name = 'recetas/mis_recetas.html'  # Template que se usará
@@ -226,6 +252,15 @@ class MisRecetasView(LoginRequiredMixin, ListView):
         # Filtra las recetas que pertenecen al usuario autenticado
         return Receta.objects.filter(usuario=self.request.user).order_by('-id')
 
+# Vista de Favoritos
+class FavoritosView(LoginRequiredMixin, ListView):
+    model = RecetaFavorita
+    template_name = 'recetas/favoritos.html'
+    context_object_name = 'favoritos'
+
+    def get_queryset(self):
+        # Filtra las recetas favoritas que pertenecen al usuario autenticado
+        return RecetaFavorita.objects.filter(usuario=self.request.user).select_related('receta')
 
 # ============================
 # GESTIÓN DE INGREDIENTES
@@ -288,3 +323,133 @@ class CrearIngredienteView(LoginRequiredMixin, CreateView):
             raise ValueError("El receta_id no fue proporcionado correctamente a get_success_url.")
         print(f"Receta ID en get_success_url: {receta_id}")  # Depuración
         return reverse('agregar_ingrediente', kwargs={'receta_id': receta_id})
+
+
+# ============================
+# BUSCADOR y FILTRADO
+# ============================
+
+class BuscadorRecetasView(ListView):
+    model = Receta
+    template_name = 'buscador/busqueda_recetas.html'
+    context_object_name = 'recetas'
+    paginate_by = 3 
+
+    def get_queryset(self):
+        """
+        Filtra recetas según búsqueda por título, ingredientes, categoría y dificultad.
+        """
+        queryset = Receta.objects.all()
+        query = self.request.GET.get('q')
+        categoria = self.request.GET.get('categoria')
+        dificultad = self.request.GET.get('dificultad')
+
+        # Búsqueda por título de receta o nombre del ingrediente
+        if query:
+            queryset = queryset.filter(
+                Q(titulo__icontains=query) |
+                Q(ingredientes__ingrediente__nombre__icontains=query)
+            ).distinct()
+
+        # Filtrar por categoría si se seleccionó una
+        if categoria:
+            queryset = queryset.filter(categoria__id=categoria)
+
+        # Filtrar por nivel de dificultad si se seleccionó uno
+        if dificultad:
+            queryset = queryset.filter(dificultad=dificultad)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        """
+        Agrega categorías y niveles de dificultad al contexto para los filtros.
+        """
+        context = super().get_context_data(**kwargs)
+        context['categorias'] = Categoria.objects.all()
+        context['niveles_dificultad'] = range(1, 6)
+        context['query'] = self.request.GET.get('q', '')
+        context['categoria_seleccionada'] = self.request.GET.get('categoria', '')
+        context['dificultad_seleccionada'] = self.request.GET.get('dificultad', '')
+        return context
+    
+# ============================
+# LISTA DE COMPRAS
+# ============================
+
+class AgregarRecetaAlCarritoView(View):
+    def post(self, request, receta_id):
+        receta = get_object_or_404(Receta, id=receta_id)
+        carrito, created = Carrito.objects.get_or_create(usuario=request.user)
+
+        # Iterar sobre los ingredientes de la receta
+        for item in RecetaIngrediente.objects.filter(receta=receta):
+            carrito_ingrediente, creado = CarritoIngrediente.objects.get_or_create(
+                carrito=carrito,
+                ingrediente=item.ingrediente,
+                defaults={'cantidad': item.cantidad}
+            )
+            if not creado:
+                carrito_ingrediente.cantidad += item.cantidad
+                carrito_ingrediente.save()
+
+        return redirect('ver_carrito')
+
+class VerCarritoView(View):
+    template_name = 'carrito/ver_carrito.html'
+
+    def get(self, request):
+        carrito, created = Carrito.objects.get_or_create(usuario=request.user)
+        comprados = request.session.get('ingredientes_comprados', [])  # Lista de IDs "comprados"
+        return render(request, self.template_name, {'carrito': carrito, 'comprados': comprados})
+
+    def post(self, request):
+        carrito = Carrito.objects.get(usuario=request.user)
+
+        # Marcar un ingrediente como comprado usando la sesión
+        if 'comprar_ingrediente' in request.POST:
+            ingrediente_id = request.POST.get('ingrediente_id')
+            comprados = request.session.get('ingredientes_comprados', [])
+            if ingrediente_id not in comprados:
+                comprados.append(ingrediente_id)
+            request.session['ingredientes_comprados'] = comprados
+
+        # Vaciar carrito al realizar la compra completa
+        elif 'comprar_todo' in request.POST:
+            carrito.ingredientes.all().delete()
+            request.session.pop('ingredientes_comprados', None)  # Limpiar "comprados"
+
+        return redirect('ver_carrito')
+    
+# ============================
+# HISTORIAL DE COCINADOS
+# ============================
+
+class RegistrarCocinadoView(View):
+    def post(self, request, receta_id):
+        receta = get_object_or_404(Receta, id=receta_id)
+        # Registrar la receta como cocinada sin notas
+        Registro.objects.create(
+            usuario=request.user,
+            receta=receta,
+            fecha=timezone.now().date()
+        )
+        return redirect('historial_cocinados')
+
+class HistorialCocinadosView(View):
+    template_name = 'historial/historial_cocinados.html'
+
+    def get(self, request):
+        registros = Registro.objects.filter(usuario=request.user).order_by('-fecha')
+        return render(request, self.template_name, {'registros': registros})
+
+    def post(self, request):
+        registro_id = request.POST.get('registro_id')
+        notas = request.POST.get('notas', '')
+
+        # Actualizamos las notas del registro
+        registro = get_object_or_404(Registro, id=registro_id, usuario=request.user)
+        registro.notas = notas
+        registro.save()
+
+        return redirect('historial_cocinados')

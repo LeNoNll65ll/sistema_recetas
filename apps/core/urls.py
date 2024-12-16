@@ -19,6 +19,12 @@ urlpatterns = [
     path('recetas/<int:pk>/eliminar/', EliminarRecetaView.as_view(), name='eliminar_receta'),
     path('ingredientes/<int:pk>/eliminar/', EliminarIngredienteView.as_view(), name='eliminar_ingrediente'),
     path('mis-recetas/', MisRecetasView.as_view(), name='mis_recetas'),
+    path('mis-favoritos/', FavoritosView.as_view(), name='mis_favoritos'),
+    path('buscar/', BuscadorRecetasView.as_view(), name='buscar_recetas'),
+    path('carrito/', VerCarritoView.as_view(), name='ver_carrito'),
+    path('carrito/agregar/<int:receta_id>/', AgregarRecetaAlCarritoView.as_view(), name='agregar_receta_carrito'),
+    path('recetas/<int:receta_id>/registrar_cocinado/', RegistrarCocinadoView.as_view(), name='registrar_cocinado'),
+    path('historial_cocinados/', HistorialCocinadosView.as_view(), name='historial_cocinados'),
 ]
 
 # Agregar rutas para archivos estáticos y de medios

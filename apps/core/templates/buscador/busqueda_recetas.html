@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Buscar Recetas{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Buscar Recetas</h1>
+
+    <!-- Formulario de búsqueda y filtros -->
+    <form method="GET" class="row g-3 mb-4">
+        <div class="col-md-6">
+            <input type="text" name="q" class="form-control" placeholder="Buscar receta o ingrediente"
+                   value="{{ query }}">
+        </div>
+        <div class="col-md-3">
+            <select name="categoria" class="form-select">
+                <option value="">Todas las categorías</option>
+                {% for cat in categorias %}
+                    <option value="{{ cat.id }}" {% if categoria_seleccionada == cat.id|stringformat:"s" %}selected{% endif %}>
+                        {{ cat.nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="dificultad" class="form-select">
+                <option value="">Dificultad</option>
+                {% for nivel in niveles_dificultad %}
+                    <option value="{{ nivel }}" {% if dificultad_seleccionada == nivel|stringformat:"s" %}selected{% endif %}>
+                        {{ nivel }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-1">
+            <button type="submit" class="btn btn-primary">Buscar</button>
+        </div>
+    </form>
+
+    <!-- Resultados de la búsqueda -->
+    {% if recetas %}
+        <div class="row">
+            {% for receta in recetas %}
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        {% if receta.imagen %}
+                            <img src="{{ receta.imagen.url }}" class="card-img-top" alt="{{ receta.titulo }}" style="height: 200px; object-fit: cover;">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ receta.titulo }}</h5>
+                            <p class="card-text">Dificultad: {{ receta.dificultad }}</p>
+                            <a href="{% url 'detalle_receta' receta.id %}" class="btn btn-primary">Ver Receta</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Paginación -->
+        <nav>
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?q={{ query }}&categoria={{ categoria_seleccionada }}&dificultad={{ dificultad_seleccionada }}&page={{ page_obj.previous_page_number }}">Anterior</a>
+                    </li>
+                {% endif %}
+                <li class="page-item disabled">
+                    <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?q={{ query }}&categoria={{ categoria_seleccionada }}&dificultad={{ dificultad_seleccionada }}&page={{ page_obj.next_page_number }}">Siguiente</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% else %}
+        <p>No se encontraron resultados para tu búsqueda.</p>
+    {% endif %}
+</div>
+{% endblock %}

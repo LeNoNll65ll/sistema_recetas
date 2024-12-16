@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4 text-center">Mi Lista de Compras</h1>
+
+    {% if carrito.ingredientes.all %}
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <ul class="list-group">
+                    {% for item in carrito.ingredientes.all %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ item.cantidad }} {{ item.ingrediente.unidad }}</strong> 
+                                de <strong>{{ item.ingrediente.nombre }}</strong>
+                            </div>
+                            <div>
+                                {% if item.id|stringformat:"s" in comprados %}
+                                    <span class="badge bg-success p-2">Comprado</span>
+                                {% else %}
+                                    <form method="POST" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="ingrediente_id" value="{{ item.id }}">
+                                        <button type="submit" name="comprar_ingrediente" class="btn btn-sm btn-outline-success">
+                                            Marcar como Comprado
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+
+                <!-- Botón para realizar la compra completa -->
+                <div class="text-center mt-4">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <button type="submit" name="comprar_todo" class="btn btn-danger btn-lg">
+                            Realizar Compra Completa
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center" role="alert">
+            <p>Tu lista de compras está vacía.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

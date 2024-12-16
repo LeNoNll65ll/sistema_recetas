@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Mis Favoritos{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Mis Recetas Favoritas</h1>
+    {% if favoritos %}
+        <div class="row">
+            {% for favorito in favoritos %}
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        {% if favorito.receta.imagen %}
+                            <img src="{{ favorito.receta.imagen.url }}" class="card-img-top" alt="{{ favorito.receta.titulo }}" style="height: 350px; object-fit: cover;">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ favorito.receta.titulo }}</h5>
+                            <p class="card-text">{{ favorito.receta.descripcion|truncatewords:15 }}</p>
+                            <a href="{% url 'detalle_receta' favorito.receta.id %}" class="btn btn-primary">Ver Detalles</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No has marcado ninguna receta como favorita aún.</p>
+    {% endif %}
+</div>
+{% endblock %}

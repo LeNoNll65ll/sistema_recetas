@@ -2,47 +2,56 @@
 
 {% block title %}Inicio | Perico Recetas{% endblock %}
 
+{% block extra_head %}
+{%load static%}
+<style>
+    /* Imagen de fondo en la sección principal */
+    .hero-section {
+        background-image: url("{% static 'img/inicio.webp' %}"); /* Ruta a tu imagen */
+        background-size: cover; /* Cubre todo el contenedor */
+        background-position: center; /* Centra la imagen */
+        background-repeat: no-repeat; /* Evita la repetición */
+        height: 60vh; /* Altura del banner (60% de la altura de la ventana) */
+        position: relative; /* Contexto para la capa semi-transparente */
+    }
+
+    /* Capa oscurecida para mejorar la legibilidad del texto */
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5); /* Capa oscura semi-transparente */
+        z-index: 1; /* Coloca la capa detrás del contenido */
+    }
+
+    /* Contenido centrado y por encima */
+    .hero-section .container {
+        position: relative;
+        z-index: 2; /* Prioridad sobre la capa oscurecida */
+        color: white; /* Color del texto */
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-{% load static %}
-<div class="container mt-5">
-    <h2 class="text-center mb-4">Recetas Destacadas</h2>
-    
-    <div class="row">
-        <!-- Card 1 -->
-        <div class="col-md-4">
-            <div class="card">
-                <img src="{% static 'img/comida_militar.webp' %}" class="card-img-top" alt="Receta 1">
-                <div class="card-body">
-                    <h5 class="card-title">Tarta de Manzana</h5>
-                    <p class="card-text">Deliciosa tarta con un toque especial de canela. Perfecta para postres.</p>
-                    <a href="#" class="btn btn-primary">Ver receta completa</a>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Card 2 -->
-        <div class="col-md-4">
-            <div class="card">
-                <img src="{% static 'img/militar_cocinando.webp' %}" class="card-img-top" alt="Receta 2">
-                <div class="card-body">
-                    <h5 class="card-title">Ensalada César</h5>
-                    <p class="card-text">Fresca y deliciosa ensalada con aderezo casero y crutones crujientes.</p>
-                    <a href="#" class="btn btn-primary">Ver receta completa</a>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Card 3 -->
-        <div class="col-md-4">
-            <div class="card">
-                <img src="{% static 'img/militar_cocinando.webp' %}" class="card-img-top" alt="Receta 3">
-                <div class="card-body">
-                    <h5 class="card-title">Pasta Carbonara</h5>
-                    <p class="card-text">Un clásico italiano con un toque de panceta y salsa cremosa.</p>
-                    <a href="#" class="btn btn-primary">Ver receta completa</a>
-                </div>
-            </div>
-        </div>
+<!-- Banner de Bienvenida con Imagen de Fondo -->
+<section class="hero-section d-flex align-items-center justify-content-center text-center">
+    <div class="container">
+        <h1 class="display-4 fw-bold">¡Bienvenido a Perico Recetas!</h1>
+        <p class="lead">Descubrí, compartí y disfrutá las mejores recetas caseras con la comunidad.</p>
+        <a href="{% url 'lista_recetas' %}" class="btn btn-primary btn-lg mt-3">Explorar Recetas</a>
     </div>
-</div>
+</section>
+
+<!-- Call to Action -->
+<section class="py-5 bg-dark text-white text-center">
+    <div class="container">
+        <h2 class="fw-bold">¿Todavía no estás registrado?</h2>
+        <p class="lead">Registrate ahora y empezá a compartir tus recetas con la comunidad.</p>
+        <a href="{% url 'register' %}" class="btn btn-warning btn-lg">Registrarse</a>
+    </div>
+</section>
 {% endblock %}

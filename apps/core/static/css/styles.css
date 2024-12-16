@@ -1,0 +1,60 @@
+/* General */
+body {
+    background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Navbar */
+.navbar {
+    background: #343a40 !important;
+}
+.navbar-brand, .nav-link {
+    color: #ffffff !important;
+}
+.navbar-nav .nav-link:hover {
+    color: #ffc107 !important;
+}
+
+/* Search Form */
+.search-form input {
+    border-radius: 50px;
+    padding: 5px 15px;
+}
+.search-form button {
+    border-radius: 50px;
+}
+
+/* Main Container */
+main.container {
+    background: #ffffff;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+}
+
+/* Mensajes */
+.messages-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+    background: #343a40;
+    color: #ffffff;
+    text-align: center;
+    padding: 10px;
+}
+
+/* Alert Messages */
+.alert-dismissible .btn-close {
+    position: relative;
+    top: 0;
+    right: 0;
+}
