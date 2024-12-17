@@ -4,65 +4,108 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h1 class="text-center mb-4">Lista de Recetas</h1>
+    <h1 class="text-center mb-4 fw-bold">Lista de Recetas</h1>
 
+    <!-- Grid de Recetas -->
     <div class="row">
         {% for receta in recetas %}
-        <div class="col-md-4">
-            <div class="card">
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <!-- Imagen de la receta -->
                 {% if receta.imagen %}
-                <img src="{{ receta.imagen.url }}" class="card-img-top" alt="{{ receta.titulo }}" style="height: 350px; object-fit: cover;">
+                <img src="{{ receta.imagen.url }}" class="card-img-top" alt="{{ receta.titulo }}" style="height: 250px; object-fit: cover;">
                 {% else %}
-                {% load static%}
-                <img src="{% static 'img/default_receta.png' %}" class="card-img-top" alt="Sin Imagen">
+                {% load static %}
+                <img src="{% static 'img/default_receta.png' %}" class="card-img-top" alt="Sin Imagen" style="height: 250px; object-fit: cover;">
                 {% endif %}
-                <div class="card-body">
-                    <h5 class="card-title">{{ receta.titulo }}</h5>
-                    <p class="card-text">{{ receta.descripcion|truncatechars:100 }}</p>
-                    <a href="{{receta.id}}" class="btn btn-primary">Ver receta completa</a>
+
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title fw-bold">{{ receta.titulo }}</h5>
+                    <p class="card-text text-muted">{{ receta.descripcion|truncatechars:100 }}</p>
+
+                    <!-- Indicador de valoración -->
+                    <div class="mb-2">
+                        <span class="badge bg-warning text-dark">
+                            <i class="bi bi-star-fill"></i>
+                            {{ receta.valoracion_promedio|floatformat:1 }} / 5
+                        </span>
+                    </div>
+
+                    <!-- Botón de favoritos -->
+                    {% if user.is_authenticated %}
+                        <form method="POST" action="{% url 'detalle_receta' receta.id %}" class="d-inline">
+                            {% csrf_token %}
+                            {% if receta.id in favoritos_ids %}
+                            <!-- Si es favorito -->
+                                <button type="submit" name="favorito" class="btn btn-danger btn-sm">
+                                    <i class="bi bi-heart-fill"></i>
+                                </button>
+                            {% else %}
+                                <!-- Si no es favorito -->
+                                <button type="submit" name="favorito" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-heart"></i>
+                                </button>
+                            {% endif %}
+                        </form>
+                    {% else %}
+                        <p class="text-muted"><small><a href="{% url 'login' %}">Inicia sesión</a> para agregar a favoritos</small></p>
+                    {% endif %}
+
+                    <!-- Botón para ver la receta completa -->
+                    <div class="mt-auto text-center">
+                        <a href="{% url 'detalle_receta' receta.id %}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-eye"></i> Ver receta completa
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
         {% empty %}
-        <p class="text-center">No hay recetas disponibles por ahora.</p>
+        <div class="col-12 text-center">
+            <p class="lead text-muted">No hay recetas disponibles por ahora.</p>
+        </div>
         {% endfor %}
     </div>
-</div>
-<!-- Controles de paginación -->
-<div class="d-flex justify-content-center mt-4">
+
+    <!-- Controles de Paginación -->
     {% if is_paginated %}
-    <nav aria-label="Paginación de recetas">
-        <ul class="pagination">
-            {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Anterior">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
-            {% endif %}
+    <div class="d-flex justify-content-center mt-4">
+        <nav aria-label="Paginación de recetas">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Anterior">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% endif %}
 
-            {% for num in paginator.page_range %}
-            {% if num == page_obj.number %}
-            <li class="page-item active" aria-current="page">
-                <span class="page-link">{{ num }}</span>
-            </li>
-            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-            </li>
-            {% endif %}
-            {% endfor %}
+                {% for num in paginator.page_range %}
+                {% if num == page_obj.number %}
+                <li class="page-item active" aria-current="page">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endif %}
+                {% endfor %}
 
-            {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Siguiente">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-            {% endif %}
-        </ul>
-    </nav>
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Siguiente">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% else %}
+    <div class="text-center text-muted mt-4">
+        <p>No se encontraron más recetas.</p>
+    </div>
     {% endif %}
 </div>
-
 {% endblock %}

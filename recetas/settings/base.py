@@ -43,11 +43,11 @@ LOCAL_MIDDLEWARE = [
 
 ]
 
-THIRD_MIDDLEWARE = [
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-]
+# THIRD_MIDDLEWARE = [
+#     'whitenoise.middleware.WhiteNoiseMiddleware',
+# ]
 
-MIDDLEWARE =  BASE_MIDDLEWARE + LOCAL_MIDDLEWARE + THIRD_MIDDLEWARE
+MIDDLEWARE =  BASE_MIDDLEWARE + LOCAL_MIDDLEWARE #+ THIRD_MIDDLEWARE
 
 ROOT_URLCONF = 'recetas.urls'
 
@@ -109,7 +109,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 STATIC_URL = '/static/'
-#STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field

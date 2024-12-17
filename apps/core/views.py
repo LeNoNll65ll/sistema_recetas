@@ -130,7 +130,18 @@ class ListaRecetasView(ListView):
     def get_queryset(self):
         # Ordena las recetas de más recientes a más antiguas
         return Receta.objects.all().order_by('-id')
-
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.user.is_authenticated:
+            # Obtener los IDs de las recetas favoritas del usuario actual
+            context['favoritos_ids'] = RecetaFavorita.objects.filter(
+                usuario=self.request.user
+            ).values_list('receta_id', flat=True)
+        else:
+            context['favoritos_ids'] = []
+        return context
+    
 
 # Vista para los detalles de una receta
 class DetalleRecetaView(FormMixin, DetailView):

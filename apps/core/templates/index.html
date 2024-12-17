@@ -3,7 +3,7 @@
 {% block title %}Inicio | Perico Recetas{% endblock %}
 
 {% block extra_head %}
-{%load static%}
+{% load static %}
 <style>
     /* Imagen de fondo en la sección principal */
     .hero-section {
@@ -47,11 +47,20 @@
 </section>
 
 <!-- Call to Action -->
+
 <section class="py-5 bg-dark text-white text-center">
     <div class="container">
+        {% if not user.is_authenticated %}
         <h2 class="fw-bold">¿Todavía no estás registrado?</h2>
         <p class="lead">Registrate ahora y empezá a compartir tus recetas con la comunidad.</p>
         <a href="{% url 'register' %}" class="btn btn-warning btn-lg">Registrarse</a>
+        {% else %}
+        <h2 class="fw-bold">¡Hola, {{ user.username }}!</h2>
+        <p class="lead">Seguí descubriendo nuevas recetas o compartí tus favoritas con la comunidad.</p>
+        <a href="{% url 'mis_recetas' %}" class="btn btn-light btn-lg"><i class="bi bi-journal-text"></i> Mis Recetas</a>
+        <a href="{% url 'lista_recetas' %}" class="btn btn-outline-light btn-lg"><i class="bi bi-search"></i> Explorar Más Recetas</a>
+        {% endif %}
     </div>
 </section>
+
 {% endblock %}

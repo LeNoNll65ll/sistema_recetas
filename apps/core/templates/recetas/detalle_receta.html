@@ -4,141 +4,105 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h1>{{ receta.titulo }}</h1>
-    <p><strong>Categoría:</strong>
-        {% if receta.categoria %}
-            {{ receta.categoria.nombre }}
-        {% else %}
-            Sin categoría
+    <!-- Tarjeta principal con imagen y detalles -->
+    <div class="card shadow-lg mb-4">
+        {% if receta.imagen %}
+            <img src="{{ receta.imagen.url }}" class="card-img-top img-fluid" alt="{{ receta.titulo }}">
         {% endif %}
-    </p>
-    <p><strong>Descripción:</strong> {{ receta.descripcion }}</p>
-    <p><strong>Dificultad:</strong> {{ receta.dificultad }}</p>
-    <p><strong>Tiempo de cocción:</strong> {{ receta.tiempo_coccion }} minutos</p>
-    <!-- Valoración promedio -->
-    <p><strong>Valoración promedio:</strong> {{ promedio_valoraciones|floatformat:1 }} / 5</p>
-    <!-- agregar favoritos -->
-    {% if user.is_authenticated %}
-        <form method="POST" action="">
-            {% csrf_token %}
-            <button type="submit" name="favorito" class="btn btn-outline-danger">
-                {% if es_favorito %}
-                    Quitar de Favoritos
-                {% else %}
-                    Agregar a Favoritos
-                {% endif %}
-            </button>
-        </form>
-    {% else %}
-        <p><a href="{% url 'login' %}">Inicia sesión</a> para agregar esta receta a favoritos.</p>
-    {% endif %}
+        <div class="card-body text-center">
+            <h1 class="fw-bold">{{ receta.titulo }}</h1>
+            <p class="text-muted">{{ receta.descripcion }}</p>
+            <p><strong>Categoría:</strong> {{ receta.categoria.nombre|default:"Sin categoría" }}</p>
+            <p><strong>Dificultad:</strong> {{ receta.dificultad }} / 5</p>
+            <p><strong>Tiempo de cocción:</strong> {{ receta.tiempo_coccion }} minutos</p>
+            <p><strong>Valoración promedio:</strong> 
+                <span class="text-warning">{{ promedio_valoraciones|floatformat:1 }} / 5 <i class="bi bi-star-fill"></i></span>
+            </p>
 
-    <!-- Imagen de la receta -->
-    {% if receta.imagen %}
-        <img src="{{ receta.imagen.url }}" alt="{{ receta.titulo }}" class="img-fluid">
-    {% endif %}
+            <!-- Botones de acciones -->
+            {% if user.is_authenticated %}
+                <form method="POST" action="" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" name="favorito" class="btn btn-outline-danger">
+                        {% if es_favorito %}
+                            <i class="bi bi-heart-fill"></i> Quitar de Favoritos
+                        {% else %}
+                            <i class="bi bi-heart"></i> Agregar a Favoritos
+                        {% endif %}
+                    </button>
+                </form>
+                <form method="POST" action="{% url 'agregar_receta_carrito' receta.id %}" class="d-inline ms-2">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-cart"></i> Agregar al Carrito</button>
+                </form>
+            {% else %}
+                <p class="mt-3"><a href="{% url 'login' %}" class="btn btn-outline-warning">Inicia sesión</a> para acceder a las funciones de favoritos y carrito.</p>
+            {% endif %}
+        </div>
+    </div>
 
-    <!-- Ingredientes -->
-    <h3 class="mt-5">Ingredientes</h3>
-    {% if ingredientes %}
-        <ul>
-            {% for ingrediente in ingredientes %}
-                <li>
-                    {% if receta.usuario == request.user %}
-                    <!-- Botón para eliminar -->
-                    <form action="{% url 'eliminar_ingrediente' ingrediente.id %}" class="d-inline">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger btn-sm">X</button>
-                    </form>
-                    {% endif %}
-                    {{ ingrediente.cantidad }} {{ ingrediente.ingrediente.unidad }} de {{ ingrediente.ingrediente.nombre }}
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No se han agregado ingredientes aún.</p>
-    {% endif %}
-    <!-- añadir al carrito -->
-    {% if user.is_authenticated %}
-        <form method="POST" action="{% url 'agregar_receta_carrito' receta.id %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-primary">Agregar Ingredientes al Carrito</button>
-        </form>
-
-    <!-- Marcar como cocinado -->
-        <form method="POST" action="{% url 'registrar_cocinado' receta.id %}" class="mt-3">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-primary">Marcar como Cocinada</button>
-        </form>
-    {% endif %}
-
-    <!-- Edicion de recetas e ingredientes -->
-    {% if receta.usuario == request.user %}
-        <a href="{% url 'editar_receta' receta.id %}" class="btn btn-warning mt-3">Editar Receta</a>
-        <a href="{% url 'eliminar_receta' receta.id %}" class="btn btn-danger mt-3">Eliminar Receta</a>
-        <a href="{% url 'agregar_ingrediente' receta.id %}" class="btn btn-success mt-3">Agregar Ingredientes</a>
-    {% endif %}
-
-    <!-- Formulario para agregar una valoración -->
+    <!-- Sección de Valoraciones -->
+    <h3 class="mt-5 mb-3 text-center">Valoraciones</h3>
     {% if user.is_authenticated %}
         {% if receta.usuario != request.user %}
-        <h3 class="mt-5">Agregar tu valoración</h3>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="btn btn-primary">Enviar valoración</button>
-        </form>
+            <div class="card p-4 mb-4 shadow-sm">
+                <h4>Agregar tu valoración</h4>
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-warning">Enviar valoración</button>
+                </form>
+            </div>
         {% endif %}
     {% else %}
-        <p class="mt-3"><a href="{% url 'login' %}">Inicia sesión</a> para agregar una valoración.</p>
+        <p class="text-center mb-4"><a href="{% url 'login' %}" class="btn btn-outline-primary">Inicia sesión</a> para agregar una valoración.</p>
     {% endif %}
 
-    <!-- Mostrar valoraciones -->
-    <h3 class="mt-5">Valoraciones</h3>
     {% if valoraciones %}
-        <ul>
+        <ul class="list-group mb-4">
             {% for valoracion in valoraciones %}
-                <li>
-                    <strong>{{ valoracion.usuario.username }}</strong>: 
-                    {{ valoracion.estrellas }} estrellas
-                    {% if valoracion.comentario %}
-                        <p>{{ valoracion.comentario }}</p>
-                    {% endif %}
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div>
+                        <strong>{{ valoracion.usuario.username }}</strong> 
+                        <span class="text-warning">{{ valoracion.estrellas }} <i class="bi bi-star-fill"></i></span>
+                        {% if valoracion.comentario %}
+                            <p class="mb-0">{{ valoracion.comentario }}</p>
+                        {% endif %}
+                    </div>
                 </li>
             {% endfor %}
         </ul>
     {% else %}
-        <p>No hay valoraciones aún.</p>
+        <p class="text-center">No hay valoraciones aún. ¡Sé el primero en valorar!</p>
     {% endif %}
 
-    <!-- Sección de comentarios -->
-    <h3 class="mt-5">Comentarios</h3>
-
-    <!-- Lista de comentarios -->
+    <!-- Sección de Comentarios -->
+    <h3 class="mt-5 mb-3 text-center">Comentarios</h3>
     {% if comentarios %}
-        <ul>
+        <ul class="list-group mb-4">
             {% for comentario in comentarios %}
-                <li>
+                <li class="list-group-item">
                     <strong>{{ comentario.usuario.username }}</strong> ({{ comentario.fecha }}):
-                    <p>{{ comentario.texto }}</p>
+                    <p class="mb-0">{{ comentario.texto }}</p>
                 </li>
             {% endfor %}
         </ul>
     {% else %}
-        <p>No hay comentarios aún. ¡Sé el primero en comentar!</p>
+        <p class="text-center">No hay comentarios aún. ¡Sé el primero en comentar!</p>
     {% endif %}
 
-    <!-- Formulario para agregar un comentario -->
+    <!-- Formulario de Comentarios -->
     {% if user.is_authenticated %}
-        <h4>Deja tu comentario</h4>
-        <form method="post">
-            {% csrf_token %}
-            {{ comentario_form.as_p }}
-            <button type="submit" name="comentario" class="btn btn-primary">Enviar comentario</button>
-        </form>
+        <div class="card p-4 shadow-sm">
+            <h4>Deja tu comentario</h4>
+            <form method="POST">
+                {% csrf_token %}
+                {{ comentario_form.as_p }}
+                <button type="submit" name="comentario" class="btn btn-primary">Enviar comentario</button>
+            </form>
+        </div>
     {% else %}
-        <p><a href="{% url 'login' %}">Inicia sesión</a> para dejar un comentario.</p>
+        <p class="text-center"><a href="{% url 'login' %}" class="btn btn-outline-info">Inicia sesión</a> para dejar un comentario.</p>
     {% endif %}
-
 </div>
 {% endblock %}

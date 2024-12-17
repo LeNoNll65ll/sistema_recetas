@@ -26,7 +26,3 @@ urlpatterns = [
     path('recetas/<int:receta_id>/registrar_cocinado/', RegistrarCocinadoView.as_view(), name='registrar_cocinado'),
     path('historial_cocinados/', HistorialCocinadosView.as_view(), name='historial_cocinados'),
 ]
-
-# # Agregar rutas para archivos estáticos y de medios
-# urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-# urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
