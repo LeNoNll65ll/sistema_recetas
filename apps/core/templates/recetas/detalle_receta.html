@@ -41,6 +41,48 @@
         </div>
     </div>
 
+    <!-- Ingredientes -->
+    <h3 class="mt-5 mb-3 text-center">Ingredientes</h3>
+    {% if ingredientes %}
+        <div class="row">
+            {% for ingrediente in ingredientes %}
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <span>{{ ingrediente.cantidad }} {{ ingrediente.ingrediente.unidad }} de <strong>{{ ingrediente.ingrediente.nombre }}</strong></span>
+                            {% if receta.usuario == request.user %}
+                                <form method="POST" action="{% url 'eliminar_ingrediente' ingrediente.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-x"></i></button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-center">No se han agregado ingredientes aún.</p>
+    {% endif %}
+
+    <!-- Edición de recetas e ingredientes -->
+    {% if receta.usuario == request.user %}
+    <div class="mt-4 text-center">
+        <div class="btn-group" role="group" aria-label="Acciones de Receta">
+            <a href="{% url 'editar_receta' receta.id %}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Editar Receta
+            </a>
+            <a href="{% url 'eliminar_receta' receta.id %}" class="btn btn-danger">
+                <i class="bi bi-trash"></i> Eliminar Receta
+            </a>
+            <a href="{% url 'agregar_ingrediente' receta.id %}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Agregar Ingredientes
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+
     <!-- Sección de Valoraciones -->
     <h3 class="mt-5 mb-3 text-center">Valoraciones</h3>
     {% if user.is_authenticated %}
